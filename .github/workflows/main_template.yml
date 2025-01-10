@@ -43,18 +43,18 @@ jobs:
           echo "App Name: ${{ github.event.inputs.appname }}"
           echo "Infra Provision: ${{ github.event.inputs.infraprovision }}"
           echo "Web App Deployment: ${{ github.event.inputs.webappdeployment }}"
+
   check-and-trigger-terraform:
     runs-on: ubuntu-latest
     needs: display-input-values
+    if: ${{ github.event.inputs.infraprovision == 'true' }}  # Only run if infraprovision is true
     steps:
       - name: Check and Trigger Terraform Deployment
         id: terraform-deploy
         env:
-            GIT_PAT: ${{ secrets.GIT_PAT }}
+          GIT_PAT: ${{ secrets.GIT_PAT }}
         run: |
-          if: echo ${{ github.event.inputs.infraprovision }}          
           echo "Triggering Terraform Deployment Workflow using REST API..."
-
           # Trigger the workflow via GitHub API
           curl -X POST \
             -H "Accept: application/vnd.github+json" \
@@ -66,22 +66,20 @@ jobs:
                 "resourcetype": "${{ github.event.inputs.resourcetype }}",
                 "environment": "${{ github.event.inputs.environment }}",
                 "appname": "${{ github.event.inputs.appname }}"
-              } 
+              }
             }'
-  
+
   check-and-trigger-dotnet:
     runs-on: ubuntu-latest
     needs: check-and-trigger-terraform
+    if: ${{ github.event.inputs.infraprovision == 'false' && github.event.inputs.webappdeployment == 'true' }}  # Only trigger dotnet if infraprovision is false and webappdeployment is true
     steps:
       - name: Check and Trigger Dotnet Deployment
-        id: dotnet-deploy      
-        
+        id: dotnet-deploy
         env:
           GIT_PAT: ${{ secrets.GIT_PAT }}
         run: |
-          if: echo ${{ github.event.inputs.infraprovision }} && ${{ github.event.inputs.webappdeployment }}
           echo "Triggering dotnet Deployment Workflow using REST API..."
-
           # Trigger the workflow via GitHub API
           curl -X POST \
             -H "Accept: application/vnd.github+json" \
@@ -94,19 +92,18 @@ jobs:
                 "appname": "${{ github.event.inputs.appname }}"
               }
             }'
+
   check-and-trigger-dotnet-only:
     runs-on: ubuntu-latest
     needs: display-input-values
-    
-    steps:    
+    if: ${{ github.event.inputs.webappdeployment == 'true' && github.event.inputs.infraprovision == 'false' }}  # Only run if webappdeployment is true and infraprovision is false
+    steps:
       - name: Check and Trigger Dotnet Deployment only
-        id: dotnet-only         
+        id: dotnet-only
         env:
           GIT_PAT: ${{ secrets.GIT_PAT }}
         run: |
-          if: echo ${{ github.event.inputs.webappdeployment }} && ${{ github.event.inputs.infraprovision }} != true
           echo "Triggering dotnet Deployment Workflow using REST API..."
-
           # Trigger the workflow via GitHub API
           curl -X POST \
             -H "Accept: application/vnd.github+json" \
