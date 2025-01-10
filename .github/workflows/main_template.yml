@@ -72,6 +72,7 @@ jobs:
   check-and-trigger-dotnet:
     runs-on: ubuntu-latest
     needs: check-and-trigger-terraform
+    if: ${{ github.event.inputs.infraprovision == 'false' && github.event.inputs.webappdeployment == 'true' }}  # Only trigger dotnet if infraprovision is false and webappdeployment is true
     steps:
       - name: Check and Trigger Dotnet Deployment
         id: dotnet-deploy
