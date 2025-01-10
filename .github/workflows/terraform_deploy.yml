@@ -1,4 +1,4 @@
-name: Terraform and Dotnet Deployment Workflow
+name: Terraform & Dotnet Deployment Workflow
 
 on:
   push:
